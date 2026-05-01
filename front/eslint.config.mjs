@@ -1,11 +1,11 @@
-import js from '@eslint/js';
+import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import importPlugin from "eslint-plugin-import";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 import unusedImports from "eslint-plugin-unused-imports";
-import tseslint from 'typescript-eslint';
+import tseslint from "typescript-eslint";
 
 const eslintConfig = defineConfig([
   // ── 基本ルール ────────────────────────────────────────────
@@ -31,13 +31,7 @@ const eslintConfig = defineConfig([
       "import/order": [
         "warn",
         {
-          groups: [
-            "type",
-            "builtin",
-            "external",
-            "internal",
-            ["parent", "sibling", "index"],
-          ],
+          groups: ["type", "builtin", "external", "internal", ["parent", "sibling", "index"]],
           "newlines-between": "never",
           alphabetize: { order: "asc", caseInsensitive: true },
         },
@@ -74,7 +68,7 @@ const eslintConfig = defineConfig([
 
   // ── TypeScript 専用・プラグインルール ────────────────────
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ["**/*.ts", "**/*.tsx"],
     plugins: {
       import: importPlugin,
       "unused-imports": unusedImports,
@@ -120,16 +114,16 @@ const eslintConfig = defineConfig([
 
   // ── 解析除外パス ──────────────────────────────────────────
   globalIgnores([
-    ".next/**",        // Next.js ビルド成果物
-    "out/**",          // next export の静的出力
-    "build/**",        // 汎用ビルド
-    "next-env.d.ts",   // Next.js が自動生成する型定義
+    ".next/**", // Next.js ビルド成果物
+    "out/**", // next export の静的出力
+    "build/**", // 汎用ビルド
+    "next-env.d.ts", // Next.js が自動生成する型定義
     "node_modules/**", // パッケージ
-    "coverage/**",     // テストカバレッジレポート
-    "dist/**",         // 汎用配布ビルド
-    ".vercel/**",      // Vercel デプロイ用の設定・キャッシュなど
-    "*.tsbuildinfo",   // TypeScript インクリメンタルビルドキャッシュ
-    "jest.config.js",  // Jest 設定
+    "coverage/**", // テストカバレッジレポート
+    "dist/**", // 汎用配布ビルド
+    ".vercel/**", // Vercel デプロイ用の設定・キャッシュなど
+    "*.tsbuildinfo", // TypeScript インクリメンタルビルドキャッシュ
+    "jest.config.js", // Jest 設定
     "jest.setup.js",
   ]),
 ]);

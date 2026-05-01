@@ -1,0 +1,167 @@
+# ワークフロー名
+name: Frontend CI
+
+# トリガーになる Github イベント
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      # front配下の変更があった場合のみ実行
+      - "front/**"
+      # ワークフロー自体の変更も対象
+      - ".github/workflows/**"
+    # 手動実行したい場合のみ有効化
+    # workflow_dispatch:
+
+# 同一PR内で古いCIをキャンセル
+# 無駄な実行コスト削減 & 最新状態のみ検証
+concurrency:
+  group: frontend-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# GitHub Actionsの権限設定
+permissions:
+  contents: read
+  # PRコメントなどを書く場合は有効化
+  # pull-requests: write
+
+# ジョブ
+jobs:
+  # 1. 型チェック
+  type-check:
+    name: TypeScript (front)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # リポジトリからソースコードの取得
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Node.js環境構築 + npmキャッシュ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      # プロジェクトの依存関係をインストール
+      - name: Install dependencies
+        working-directory: front
+        run: npm ci
+
+      # 型チェックを実行
+      # → 型エラー検出
+      - name: Run TypeScript type check
+        working-directory: front
+        run: npm run typecheck
+
+  # 2. コード品質チェック
+  # 型チェックが成功したときだけジョブを行う
+  eslint:
+    name: ESLint (front)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - type-check
+
+    steps:
+      # リポジトリからソースコードの取得
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Node.js環境構築 + npmキャッシュ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      # プロジェクトの依存関係をインストール
+      - name: Install dependencies
+        working-directory: front
+        run: npm ci
+
+      # 静的解析を実行
+      # → バグ・アンチパターン検出
+      - name: Run ESLint
+        working-directory: front
+        run: npm run lint
+
+  # フォーマットチェック
+  # ESLintが成功したときだけジョブを行う
+  format-check:
+    name: Prettier (front)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - eslint
+
+    steps:
+      # リポジトリからソースコードの取得
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Node.js環境構築 + npmキャッシュ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      # プロジェクトの依存関係をインストール
+      - name: Install dependencies
+        working-directory: front
+        run: npm ci
+
+      # Prettierを実行
+      # → フォーマット崩れ検出（修正はしない）
+      - name: Run Prettier check
+        working-directory: front
+        run: npm run format:check
+
+
+  # 4. テスト
+  # 型チェック・ESLint・Prettierが成功したときだけジョブを行う
+  test:
+    name: Jest (front)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs:
+      - format-check
+
+    steps:
+      # リポジトリからソースコードの取得
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Node.js環境構築 + npmキャッシュ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      # プロジェクトの依存関係をインストール
+      - name: Install dependencies
+        working-directory: front
+        run: npm ci
+
+      # カバレッジ付き単体テストを実行(テストが0件でも通過可能)
+      # → 回帰バグ検出
+      - name: Run tests with coverage
+        working-directory: front
+        run: npm run test -- --coverage --passWithNoTests
+
+      # カバレッジレポートを保存
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: front/coverage
