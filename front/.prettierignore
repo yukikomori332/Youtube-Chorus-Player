@@ -1,0 +1,22 @@
+# build outputs
+.next
+out
+build
+dist
+coverage
+
+# dependencies
+node_modules
+package-lock.json
+
+# environment variables
+.env*
+
+# static assets
+public
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo // TypeScriptのincremental buildのためのキャッシュファイル
