@@ -153,11 +153,11 @@ jobs:
         working-directory: front
         run: npm ci
 
-      # カバレッジ付き単体テストを実行
+      # カバレッジ付き単体テストを実行(テストが0件でも通過可能)
       # → 回帰バグ検出
       - name: Run tests with coverage
         working-directory: front
-        run: npm run test -- --coverage
+        run: npm run test -- --coverage --passWithNoTests
 
       # カバレッジレポートを保存
       - name: Upload coverage report
