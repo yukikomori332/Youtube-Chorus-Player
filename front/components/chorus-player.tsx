@@ -2,6 +2,7 @@
 
 import { Play, Pause, RotateCcw, Music, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { VideoInput } from "@/components/video-input";
 
 export function ChorusPlayer() {
   return (
@@ -48,7 +49,7 @@ export function ChorusPlayer() {
         {/* URL入力 */}
         <section className="max-w-2xl mx-auto">
           {/* URL入力用コンポーネントを読み込む */}
-          <></>
+          <VideoInput />
         </section>
 
         {/* 動画グリッド */}
