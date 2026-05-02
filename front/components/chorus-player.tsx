@@ -42,6 +42,18 @@ export function ChorusPlayer() {
                     </div>
                 </div>
             </header>
+
+            {/* フッター */}
+            <footer className="border-t mt-auto">
+                <div className="container mx-auto px-4 py-4">
+                    <p className="text-center text-sm text-muted-foreground">
+                        YouTube IFrame Player APIを使用しています。 動画の著作権は各権利者に帰属します。
+                    </p>
+                    <p className="text-center text-sm text-muted-foreground">
+                        ©2026 Hakoice Studio All Rights Reserved.
+                    </p>
+                </div>
+            </footer>
         </div>
     );
 }
