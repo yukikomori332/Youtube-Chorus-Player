@@ -10,11 +10,7 @@ export function VideoInput() {
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="url"
-            placeholder="YouTube URLを入力..."
-            className="pl-10"
-          />
+          <Input type="url" placeholder="YouTube URLを入力..." className="pl-10" />
         </div>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
