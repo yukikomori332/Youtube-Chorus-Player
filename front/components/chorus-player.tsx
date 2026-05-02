@@ -2,7 +2,7 @@
 
 import { Play, Pause, RotateCcw, Music, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { VideoInput } from "@/components/video-input";
+// import { VideoInput } from "@/components/video-input";
 
 export function ChorusPlayer() {
   return (
