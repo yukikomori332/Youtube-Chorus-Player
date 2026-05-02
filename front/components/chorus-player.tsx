@@ -49,7 +49,7 @@ export function ChorusPlayer() {
         {/* URL入力 */}
         <section className="max-w-2xl mx-auto">
           {/* URL入力用コンポーネントを読み込む */}
-          <VideoInput />
+          {/* <VideoInput /> */}
         </section>
 
         {/* 動画グリッド */}
