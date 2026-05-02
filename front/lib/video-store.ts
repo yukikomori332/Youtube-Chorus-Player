@@ -59,3 +59,32 @@ export function extractYouTubeVideoId(input: string): string | null {
 
   return null;
 }
+
+/**
+ * 秒数を `H:MM:SS` 形式の文字列にフォーマットする
+ *
+ * - 1時間未満の場合は時間部分を省略し `M:SS` 形式で返す
+ * - `showMilliseconds` が true の場合は末尾に `.mmm` を付与する
+ *
+ * @param totalSeconds フォーマットする秒数（小数点以下はミリ秒として扱う）
+ * @param showMilliseconds trueの場合、ミリ秒を表示する（デフォルト: false）
+ * @returns フォーマットされた時間の文字列
+ * @example
+ * formatTime(3661)        // => "1:01:01"
+ * formatTime(65)          // => "1:05"
+ * formatTime(65.5, true)  // => "1:05.500"
+ */
+export function formatTime(totalSeconds: number, showMilliseconds: boolean = false): string {
+  const hours   = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const milliseconds = Math.floor((totalSeconds % 1) * 1000);
+
+  const minutesString = minutes.toString().padStart(hours > 0 ? 2 : 1, "0");
+  const secondsString = seconds.toString().padStart(2, "0");
+  const msString      = milliseconds.toString().padStart(3, "0");
+
+  const timeParts = hours > 0 ? `${hours}:${minutesString}:${secondsString}` : `${minutesString}:${secondsString}`;
+
+  return showMilliseconds ? `${timeParts}.${msString}` : timeParts;
+}
