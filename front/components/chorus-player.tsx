@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Pause, RotateCcw, Music } from "lucide-react";
+import { Play, Pause, RotateCcw, Music, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ChorusPlayer() {
@@ -42,6 +42,39 @@ export function ChorusPlayer() {
                     </div>
                 </div>
             </header>
+
+            {/* メインコンテンツ */}
+            <main className="container mx-auto px-4 py-6 space-y-6">
+                {/* URL入力 */}
+                <section className="max-w-2xl mx-auto">
+                    {/* URL入力用コンポーネントを読み込む */}
+                    <></>
+                </section>
+
+                {/* 動画グリッド */}
+                <section className="text-center py-20">
+                    <div className="max-w-md mx-auto space-y-4">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                            <Music className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h2 className="text-xl font-semibold">動画を追加して始めよう</h2>
+                        <p className="text-muted-foreground">
+                            YouTube URLを入力して、お気に入りの歌ってみた動画を追加してください。
+                            複数の動画を同時に再生して、夢の合唱を実現しましょう！
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                                <Settings2 className="h-4 w-4" />
+                                <span>開始・終了時間を設定</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <RotateCcw className="h-4 w-4" />
+                                <span>リピート再生</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
 
             {/* フッター */}
             <footer className="border-t mt-auto">
