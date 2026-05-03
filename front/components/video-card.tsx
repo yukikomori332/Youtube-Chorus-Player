@@ -21,51 +21,59 @@ interface VideoCardProps {
   onReachedEnd?: (id: string) => void;
 }
 
-export function VideoCard(
-  {
-    video,
-    onUpdate,
-    onRemove,
-    isPlaying,
-    registerPlayer,
-    syncedRepeatEnabled = false,
-    playToken = 0,
-    onReachedEnd,
-  }: VideoCardProps) {
-    const containerId = `player-${video.id}`;
-    const containerRef = useRef<HTMLDivElement>(null);
+export function VideoCard({
+  video,
+  onUpdate,
+  onRemove,
+  isPlaying,
+  registerPlayer,
+  syncedRepeatEnabled = false,
+  playToken = 0,
+  onReachedEnd,
+}: VideoCardProps) {
+  const containerId = `player-${video.id}`;
+  const containerRef = useRef<HTMLDivElement>(null);
 
-    // ───────────────────────────────────────────
-    // refs（クロージャ問題の回避 & プレイヤー保持）
-    // ───────────────────────────────────────────
-    const playerRef              = useRef<YT.Player | null>(null);
-    const intervalRef            = useRef<NodeJS.Timeout | null>(null);
-    const videoRef               = useRef(video);
-    const syncedRepeatEnabledRef = useRef(syncedRepeatEnabled);
-    const onReachedEndRef        = useRef(onReachedEnd);
-    const hasSignaledEndRef      = useRef(false);
+  // ───────────────────────────────────────────
+  // refs（クロージャ問題の回避 & プレイヤー保持）
+  // ───────────────────────────────────────────
+  const playerRef = useRef<YT.Player | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef(video);
+  const syncedRepeatEnabledRef = useRef(syncedRepeatEnabled);
+  const onReachedEndRef = useRef(onReachedEnd);
+  const hasSignaledEndRef = useRef(false);
 
-    // ───────────────────────────────────────────
-    // state
-    // ───────────────────────────────────────────
-    const [isReady, setIsReady]   = useState(false);
-    const [duration, setDuration] = useState(0);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [volume, setVolume]     = useState(100);
-    const [isMuted, setIsMuted]   = useState(false);
+  // ───────────────────────────────────────────
+  // state
+  // ───────────────────────────────────────────
+  const [isReady, setIsReady] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(100);
+  const [isMuted, setIsMuted] = useState(false);
 
-    // ───────────────────────────────────────────
-    // refの最新値同期
-    // ───────────────────────────────────────────
-    useEffect(() => { videoRef.current = video; }, [video]);
-    useEffect(() => { syncedRepeatEnabledRef.current = syncedRepeatEnabled; }, [syncedRepeatEnabled]);
-    useEffect(() => { onReachedEndRef.current = onReachedEnd; }, [onReachedEnd]);
-    useEffect(() => { hasSignaledEndRef.current = false; }, [playToken]);
+  // ───────────────────────────────────────────
+  // refの最新値同期
+  // ───────────────────────────────────────────
+  useEffect(() => {
+    videoRef.current = video;
+  }, [video]);
+  useEffect(() => {
+    syncedRepeatEnabledRef.current = syncedRepeatEnabled;
+  }, [syncedRepeatEnabled]);
+  useEffect(() => {
+    onReachedEndRef.current = onReachedEnd;
+  }, [onReachedEnd]);
+  useEffect(() => {
+    hasSignaledEndRef.current = false;
+  }, [playToken]);
 
-    // ───────────────────────────────────────────
-    // 音量・ミュート操作
-    // ───────────────────────────────────────────
-    const handleVolumeChange = useCallback((value: number[]) => {
+  // ───────────────────────────────────────────
+  // 音量・ミュート操作
+  // ───────────────────────────────────────────
+  const handleVolumeChange = useCallback(
+    (value: number[]) => {
       const vol = value[0];
       setVolume(vol);
 
@@ -77,73 +85,76 @@ export function VideoCard(
         player.unMute();
         setIsMuted(false);
       }
-    }, [isMuted]);
+    },
+    [isMuted]
+  );
 
-    const toggleMute = useCallback(() => {
-      const player = playerRef.current;
-      if (!player) return;
+  const toggleMute = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
 
-      if (isMuted) {
-        player.unMute();
-        player.setVolume(volume);
-      } else {
-        player.mute();
-      }
-      setIsMuted((prev) => !prev);
-    }, [isMuted, volume]);
+    if (isMuted) {
+      player.unMute();
+      player.setVolume(volume);
+    } else {
+      player.mute();
+    }
+    setIsMuted((prev) => !prev);
+  }, [isMuted, volume]);
 
-    // ───────────────────────────────────────────
-    // インターバル管理
-    // ───────────────────────────────────────────
-    const clearTimeInterval = useCallback(() => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    }, []);
+  // ───────────────────────────────────────────
+  // インターバル管理
+  // ───────────────────────────────────────────
+  const clearTimeInterval = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
 
-    const handleTimeProgress = useCallback((time: number) => {
-      setCurrentTime(time);
+  const handleTimeProgress = useCallback((time: number) => {
+    setCurrentTime(time);
 
-      const cv     = videoRef.current;
-      const player = playerRef.current;
-      if (!cv.endTime || time < cv.endTime || !player) return;
+    const cv = videoRef.current;
+    const player = playerRef.current;
+    if (!cv.endTime || time < cv.endTime || !player) return;
 
-      if (syncedRepeatEnabledRef.current) {
-        if (!hasSignaledEndRef.current) {
-          hasSignaledEndRef.current = true;
-          player.pauseVideo?.();
-          onReachedEndRef.current?.(cv.id);
-        } else {
-          player.pauseVideo?.();
-        }
-        return;
-      }
-
-      if (cv.repeat) {
-        player.seekTo?.(cv.startTime, true);
+    if (syncedRepeatEnabledRef.current) {
+      if (!hasSignaledEndRef.current) {
+        hasSignaledEndRef.current = true;
+        player.pauseVideo?.();
+        onReachedEndRef.current?.(cv.id);
       } else {
         player.pauseVideo?.();
       }
-    }, []);
+      return;
+    }
 
-    const startTimeInterval = useCallback(() => {
-      clearTimeInterval();
-      intervalRef.current = setInterval(() => {
-        const player = playerRef.current;
-        if (typeof player?.getCurrentTime === "function") {
-          handleTimeProgress(player.getCurrentTime());
-        }
-      }, 100);
-    }, [clearTimeInterval, handleTimeProgress]);
+    if (cv.repeat) {
+      player.seekTo?.(cv.startTime, true);
+    } else {
+      player.pauseVideo?.();
+    }
+  }, []);
 
-    // ───────────────────────────────────────────
-    // 状態変化ハンドラ
-    // ───────────────────────────────────────────
-    const handleStateChange = useCallback((event: YT.OnStateChangeEvent) => {
+  const startTimeInterval = useCallback(() => {
+    clearTimeInterval();
+    intervalRef.current = setInterval(() => {
+      const player = playerRef.current;
+      if (typeof player?.getCurrentTime === "function") {
+        handleTimeProgress(player.getCurrentTime());
+      }
+    }, 100);
+  }, [clearTimeInterval, handleTimeProgress]);
+
+  // ───────────────────────────────────────────
+  // 状態変化ハンドラ
+  // ───────────────────────────────────────────
+  const handleStateChange = useCallback(
+    (event: YT.OnStateChangeEvent) => {
       const { PlayerState } = window.YT;
       const player = playerRef.current;
-      const cv     = videoRef.current;
+      const cv = videoRef.current;
 
       if (event.data === PlayerState.PLAYING) {
         startTimeInterval();
@@ -167,78 +178,80 @@ export function VideoCard(
         player.seekTo?.(cv.startTime, true);
         player.playVideo?.();
       }
-    }, [startTimeInterval, clearTimeInterval]);
+    },
+    [startTimeInterval, clearTimeInterval]
+  );
 
-    // ───────────────────────────────────────────
-    // プレイヤー初期化・破棄
-    // ───────────────────────────────────────────
-    useEffect(() => {
-      if (!video.videoId) return;
+  // ───────────────────────────────────────────
+  // プレイヤー初期化・破棄
+  // ───────────────────────────────────────────
+  useEffect(() => {
+    if (!video.videoId) return;
 
-      const initPlayer = () => {
-        if (!window.YT?.Player) return;
+    const initPlayer = () => {
+      if (!window.YT?.Player) return;
 
-        playerRef.current?.destroy();
-        playerRef.current = null;
+      playerRef.current?.destroy();
+      playerRef.current = null;
 
-        playerRef.current = new window.YT.Player(containerId, {
-          videoId: video.videoId,
-          playerVars: {
-            autoplay: 0,
-            controls: 0,
-            start: Math.floor(video.startTime),
-            modestbranding: 1,
-            rel: 0,
-            enablejsapi: 1,
-            origin: window.location.origin,
+      playerRef.current = new window.YT.Player(containerId, {
+        videoId: video.videoId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          start: Math.floor(video.startTime),
+          modestbranding: 1,
+          rel: 0,
+          enablejsapi: 1,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: ({ target }: YT.PlayerEvent) => {
+            setDuration(target.getDuration());
+            setIsReady(true);
+            registerPlayer(video.id, target as YT.Player);
           },
-          events: {
-            onReady: ({ target }: YT.PlayerEvent) => {
-              setDuration(target.getDuration());
-              setIsReady(true);
-              registerPlayer(video.id, target as YT.Player);
-            },
-            onStateChange: handleStateChange,
-          },
-        });
-      };
+          onStateChange: handleStateChange,
+        },
+      });
+    };
 
-      if (window.YT?.Player) {
-        initPlayer();
-      } else {
-        const timer = setInterval(() => {
-          if (window.YT?.Player) {
-            clearInterval(timer);
-            initPlayer();
-          }
-        }, 100);
-        return () => clearInterval(timer);
-      }
+    if (window.YT?.Player) {
+      initPlayer();
+    } else {
+      const timer = setInterval(() => {
+        if (window.YT?.Player) {
+          clearInterval(timer);
+          initPlayer();
+        }
+      }, 100);
+      return () => clearInterval(timer);
+    }
 
-      return () => {
-        clearTimeInterval();
-        registerPlayer(video.id, null);
-        playerRef.current?.destroy();
-        playerRef.current = null;
-      };
+    return () => {
+      clearTimeInterval();
+      registerPlayer(video.id, null);
+      playerRef.current?.destroy();
+      playerRef.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [video.videoId, video.id, containerId]);
-    // ↑ handleStateChangeを含めると再初期化ループが起きるため意図的に除外
+  }, [video.videoId, video.id, containerId]);
+  // ↑ handleStateChangeを含めると再初期化ループが起きるため意図的に除外
 
-    // ───────────────────────────────────────────
-    // 再生状態の同期
-    // ───────────────────────────────────────────
-    useEffect(() => {
-      const player = playerRef.current;
-      if (!isReady || !player || typeof player.seekTo !== "function") return;
+  // ───────────────────────────────────────────
+  // 再生状態の同期
+  // ───────────────────────────────────────────
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!isReady || !player || typeof player.seekTo !== "function") return;
 
-      if (isPlaying) {
-        player.seekTo(video.startTime, true);
-        player.playVideo();
-      } else {
-        player.pauseVideo();
-      }
-    }, [isPlaying, isReady, video.startTime, playToken]);
+    if (isPlaying) {
+      player.seekTo(video.startTime, true);
+      player.playVideo();
+    } else {
+      player.pauseVideo();
+    }
+  }, [isPlaying, isReady, video.startTime, playToken]);
 
   return (
     <Card className="overflow-hidden">
