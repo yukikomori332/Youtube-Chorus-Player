@@ -75,14 +75,14 @@ export function extractYouTubeVideoId(input: string): string | null {
  * formatTime(65.5, true)  // => "1:05.500"
  */
 export function formatTime(totalSeconds: number, showMilliseconds: boolean = false): string {
-  const hours   = Math.floor(totalSeconds / 3600);
+  const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
   const milliseconds = Math.floor((totalSeconds % 1) * 1000);
 
   const minutesString = minutes.toString().padStart(hours > 0 ? 2 : 1, "0");
   const secondsString = seconds.toString().padStart(2, "0");
-  const msString      = milliseconds.toString().padStart(3, "0");
+  const msString = milliseconds.toString().padStart(3, "0");
 
   const timeParts = hours > 0 ? `${hours}:${minutesString}:${secondsString}` : `${minutesString}:${secondsString}`;
 
