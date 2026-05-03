@@ -186,6 +186,7 @@ export function VideoCard({
   // プレイヤー初期化・破棄
   // ───────────────────────────────────────────
   useEffect(() => {
+    const videoIdString = video.videoId;
     if (!video.videoId) return;
 
     const initPlayer = () => {
@@ -195,7 +196,7 @@ export function VideoCard({
       playerRef.current = null;
 
       playerRef.current = new window.YT.Player(containerId, {
-        videoId: video.videoId,
+        videoId: videoIdString,
         playerVars: {
           autoplay: 0,
           controls: 0,
