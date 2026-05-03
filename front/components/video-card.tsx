@@ -15,7 +15,7 @@ interface VideoCardProps {
   onUpdate: (video: VideoPlaybackConfig) => void;
   onRemove: (id: string) => void;
   isPlaying: boolean;
-  registerPlayer: (id: string, player: object | null) => void;
+  registerPlayer: (id: string, player: YT.Player | null) => void;
   syncedRepeatEnabled?: boolean;
   playToken?: number;
   onReachedEnd?: (id: string) => void;
@@ -206,10 +206,11 @@ export function VideoCard({
           origin: window.location.origin,
         },
         events: {
-          onReady: ({ target }: YT.PlayerEvent) => {
-            setDuration(target.getDuration());
+          onReady: (event: YT.PlayerEvent) => {
+            const player = event.target;
+            setDuration(player.getDuration());
             setIsReady(true);
-            registerPlayer(video.id, target as YT.Player);
+            registerPlayer(video.id, player);
           },
           onStateChange: handleStateChange,
         },
