@@ -206,10 +206,11 @@ export function VideoCard({
           origin: window.location.origin,
         },
         events: {
-          onReady: ({ target }: YT.PlayerEvent) => {
-            setDuration(target.getDuration());
+          onReady: (event: YT.PlayerEvent) => {
+            const player = event.target;
+            setDuration(player.getDuration());
             setIsReady(true);
-            registerPlayer(video.id, target.target);
+            registerPlayer(video.id, player);
           },
           onStateChange: handleStateChange,
         },
