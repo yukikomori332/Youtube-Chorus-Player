@@ -1,10 +1,176 @@
 "use client";
 
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Play, Pause, RotateCcw, Music, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// import { VideoInput } from "@/components/video-input";
+import { VideoCard } from "@/components/video-card";
+import { VideoInput } from "@/components/video-input";
+import { type VideoPlaybackConfig } from "@/lib/video-store";
 
 export function ChorusPlayer() {
+  // ───────────────────────────────────────────
+  // ref
+  // ───────────────────────────────────────────
+  const videosRef = useRef<VideoPlaybackConfig[]>([]);
+  const playersRef = useRef<Map<string, YT.Player>>(new Map());
+
+  // ───────────────────────────────────────────
+  // state
+  // ───────────────────────────────────────────
+  const [videos, setVideos] = useState<VideoPlaybackConfig[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [, setFinishedVideos] = useState<Set<string>>(new Set());
+  const [playToken, setPlayToken] = useState(0);
+
+  // ───────────────────────────────────────────
+  // refの最新値同期
+  // ───────────────────────────────────────────
+  useEffect(() => {
+    videosRef.current = videos;
+  }, [videos]);
+
+  // ───────────────────────────────────────────
+  // YouTube IFrame APIの初期化
+  // ───────────────────────────────────────────
+  useEffect(() => {
+    if (typeof window === "undefined" || window.YT) return;
+
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+
+    const firstScript = document.getElementsByTagName("script")[0];
+    const parent = firstScript?.parentNode ?? document.head;
+    parent.insertBefore(tag, firstScript ?? null);
+
+    window.onYouTubeIframeAPIReady = () => {
+      // API ready — 必要なら外部へコールバックを渡す
+    };
+  }, []);
+
+  // ───────────────────────────────────────────
+  // プレイヤーの登録・破棄
+  // ───────────────────────────────────────────
+  const registerPlayer = useCallback(
+    (id: string, player: YT.Player | null) => {
+      if (player) {
+        playersRef.current.set(id, player);
+      } else {
+        playersRef.current.delete(id);
+      }
+    },
+    []
+  );
+
+  const removePlayer = useCallback((id: string) => {
+    playersRef.current.delete(id);
+  }, []);
+
+  // ───────────────────────────────────────────
+  // プレイヤーの再生・停止・リセット・同期ループ
+  // ───────────────────────────────────────────
+  const syncedRepeatEnabled = videos.some((v) => v.repeat);
+
+  const handlePlayAll = useCallback(() => {
+    setIsPlaying(true);
+    setFinishedVideos(new Set());
+    setPlayToken((t) => t + 1);
+  }, [setIsPlaying, setFinishedVideos, setPlayToken]);
+
+  const handlePauseAll = useCallback(() => {
+    setIsPlaying(false);
+    setFinishedVideos(new Set());
+    playersRef.current.forEach((player) => {
+      try {
+        player.pauseVideo();
+      } catch {
+        // プレイヤーが既に破棄されている場合は無視
+      }
+    });
+  }, [setIsPlaying, setFinishedVideos, playersRef]);
+
+  const handleResetAll = useCallback(() => {
+    setIsPlaying(false);
+    setFinishedVideos(new Set());
+    playersRef.current.forEach((player) => {
+      try {
+        player.pauseVideo();
+        player.seekTo(0, true);
+      } catch {
+        // プレイヤーが既に破棄されている場合は無視
+      }
+    });
+    videos.forEach((video) => {
+      const player = playersRef.current.get(video.id);
+      if (player) {
+        try {
+          player.seekTo(video.startTime, true);
+        } catch {
+          // プレイヤーが既に破棄されている場合は無視
+        }
+      }
+    });
+  }, [videos, playersRef, setIsPlaying, setFinishedVideos]);
+
+  const handleReachedEnd = useCallback(
+    (id: string) => {
+      if (!(syncedRepeatEnabled && isPlaying)) return;
+
+      setFinishedVideos((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+
+        if (videosRef.current.length > 0 && next.size >= videosRef.current.length) {
+          queueMicrotask(() => {
+            setFinishedVideos(new Set());
+            setPlayToken((t) => t + 1);
+          });
+        }
+
+        return next;
+      });
+    },
+    [isPlaying, syncedRepeatEnabled, videosRef, setFinishedVideos, setPlayToken]
+  );
+
+  // ───────────────────────────────────────────
+  // 動画の追加・更新・削除
+  // ───────────────────────────────────────────
+  const addVideo = useCallback((url: string, videoId: string) => {
+    setVideos((prev) => [
+      ...prev,
+      {
+        id: `video-${Date.now()}`,
+        url,
+        videoId,
+        title: `動画 ${prev.length + 1}`,
+        startTime: 0,
+        endTime: null,
+        repeat: false,
+      },
+    ]);
+  }, []);
+
+  const updateVideo = useCallback((updated: VideoPlaybackConfig) => {
+    setVideos((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
+  }, []);
+
+  const removeVideo = useCallback(
+    (id: string) => {
+      setVideos((prev) => prev.filter((v) => v.id !== id));
+      removePlayer(id);
+    },
+    [removePlayer]
+  );
+
+  const gridCols =
+    videos.length <= 1
+      ? "grid-cols-1"
+      : videos.length <= 2
+        ? "grid-cols-1 md:grid-cols-2"
+        : videos.length <= 4
+          ? "grid-cols-1 md:grid-cols-2"
+          : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+
   return (
     <div className="min-h-screen bg-background">
       {/* ヘッダー */}
@@ -23,23 +189,26 @@ export function ChorusPlayer() {
             </div>
 
             {/* 再生コントロール */}
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" title="リセット">
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button size="lg" className="gap-2">
-                <>
-                  <Pause className="h-5 w-5" />
-                  一時停止
-                </>
-              </Button>
-              <Button size="lg" className="gap-2">
-                <>
-                  <Play className="h-5 w-5" />
-                  同時再生
-                </>
-              </Button>
-            </div>
+            {videos.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={handleResetAll} title="リセット">
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <Button size="lg" onClick={isPlaying ? handlePauseAll : handlePlayAll} className="gap-2">
+                  {isPlaying ? (
+                    <>
+                      <Pause className="h-5 w-5" />
+                      一時停止
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-5 w-5" />
+                      同時再生
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -48,33 +217,50 @@ export function ChorusPlayer() {
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* URL入力 */}
         <section className="max-w-2xl mx-auto">
-          {/* URL入力用コンポーネントを読み込む */}
-          {/* <VideoInput /> */}
+          <VideoInput onAdd={addVideo} />
         </section>
 
         {/* 動画グリッド */}
-        <section className="text-center py-20">
-          <div className="max-w-md mx-auto space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
-              <Music className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h2 className="text-xl font-semibold">動画を追加して始めよう</h2>
-            <p className="text-muted-foreground">
-              YouTube URLを入力して、お気に入りの歌ってみた動画を追加してください。
-              複数の動画を同時に再生して、夢の合唱を実現しましょう！
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Settings2 className="h-4 w-4" />
-                <span>開始・終了時間を設定</span>
+        {videos.length > 0 ? (
+          <section className={`grid ${gridCols} gap-4`}>
+            {videos.map((video) => (
+              <VideoCard
+                key={video.id}
+                video={video}
+                onUpdate={updateVideo}
+                onRemove={removeVideo}
+                isPlaying={isPlaying}
+                registerPlayer={registerPlayer}
+                syncedRepeatEnabled={syncedRepeatEnabled}
+                playToken={playToken}
+                onReachedEnd={handleReachedEnd}
+              />
+            ))}
+          </section>
+        ) : (
+          <section className="text-center py-20">
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                <Music className="h-8 w-8 text-muted-foreground" />
               </div>
-              <div className="flex items-center gap-1">
-                <RotateCcw className="h-4 w-4" />
-                <span>リピート再生</span>
+              <h2 className="text-xl font-semibold">動画を追加して始めよう</h2>
+              <p className="text-muted-foreground">
+                YouTube URLを入力して、お気に入りの歌ってみた動画を追加してください。
+                複数の動画を同時に再生して、夢の合唱を実現しましょう！
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Settings2 className="h-4 w-4" />
+                  <span>開始・終了時間を設定</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <RotateCcw className="h-4 w-4" />
+                  <span>リピート再生</span>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
       {/* フッター */}
