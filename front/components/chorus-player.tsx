@@ -50,16 +50,13 @@ export function ChorusPlayer() {
   // ───────────────────────────────────────────
   // プレイヤーの登録・破棄
   // ───────────────────────────────────────────
-  const registerPlayer = useCallback(
-    (id: string, player: YT.Player | null) => {
-      if (player) {
-        playersRef.current.set(id, player);
-      } else {
-        playersRef.current.delete(id);
-      }
-    },
-    []
-  );
+  const registerPlayer = useCallback((id: string, player: YT.Player | null) => {
+    if (player) {
+      playersRef.current.set(id, player);
+    } else {
+      playersRef.current.delete(id);
+    }
+  }, []);
 
   const removePlayer = useCallback((id: string) => {
     playersRef.current.delete(id);
