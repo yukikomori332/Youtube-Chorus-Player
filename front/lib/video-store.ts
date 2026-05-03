@@ -59,3 +59,98 @@ export function extractYouTubeVideoId(input: string): string | null {
 
   return null;
 }
+
+/**
+ * 秒数を `H:MM:SS` 形式の文字列にフォーマットする
+ *
+ * - 1時間未満の場合は時間部分を省略し `M:SS` 形式で返す
+ * - `showMilliseconds` が true の場合は末尾に `.mmm` を付与する
+ *
+ * @param totalSeconds フォーマットする秒数（小数点以下はミリ秒として扱う）
+ * @param showMilliseconds trueの場合、ミリ秒を表示する（デフォルト: false）
+ * @returns フォーマットされた時間の文字列
+ * @example
+ * formatTime(3661)        // => "1:01:01"
+ * formatTime(65)          // => "1:05"
+ * formatTime(65.5, true)  // => "1:05.500"
+ */
+export function formatTime(totalSeconds: number, showMilliseconds: boolean = false): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const milliseconds = Math.floor((totalSeconds % 1) * 1000);
+
+  const minutesString = minutes.toString().padStart(hours > 0 ? 2 : 1, "0");
+  const secondsString = seconds.toString().padStart(2, "0");
+  const msString = milliseconds.toString().padStart(3, "0");
+
+  const timeParts = hours > 0 ? `${hours}:${minutesString}:${secondsString}` : `${minutesString}:${secondsString}`;
+
+  return showMilliseconds ? `${timeParts}.${msString}` : timeParts;
+}
+
+/** parseTimeInput が受け付ける入力形式 */
+const TIME_INPUT_PATTERN =
+  /^(\d+):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?$|^(\d+):(\d{1,2})(?:\.(\d{1,3}))?$|^(\d+(?:\.\d{1,3})?)$/;
+
+/**
+ * 時間文字列を秒数（小数）にパースする
+ *
+ * サポート形式:
+ * - `H:MM:SS`        例: "1:02:03"
+ * - `H:MM:SS.mmm`    例: "1:02:03.500"
+ * - `M:SS`           例: "2:03"
+ * - `M:SS.mmm`       例: "2:03.500"
+ * - `秒（整数）`      例: "3723"
+ * - `秒（小数）`      例: "3723.5"
+ *
+ * @param value パースする時間文字列
+ * @returns 秒数（ミリ秒は小数部として返す）
+ * @throws {Error} サポート外の形式が渡された場合
+ * @example
+ * parseTimeInput("1:02:03.500") // => 3723.5
+ * parseTimeInput("2:03")        // => 123
+ * parseTimeInput("3723")        // => 3723
+ */
+export function parseTimeInput(value: string): number {
+  const trimmed = value.trim();
+
+  if (!TIME_INPUT_PATTERN.test(trimmed)) {
+    throw new Error(`parseTimeInput: サポート外の形式です: "${trimmed}"`);
+  }
+
+  // ミリ秒を分離（小数点は最初の1つだけ使用）
+  const dotIndex = trimmed.indexOf(".");
+  const hasMilliseconds = dotIndex !== -1;
+  const mainStr = hasMilliseconds ? trimmed.slice(0, dotIndex) : trimmed;
+  const milliseconds = hasMilliseconds ? parseMilliseconds(trimmed.slice(dotIndex + 1)) : 0;
+
+  // コロン区切りで時・分・秒をパース
+  const totalSeconds = mainStr.includes(":") ? parseColonSeparated(mainStr) : parseInt(mainStr, 10);
+
+  return totalSeconds + milliseconds / 1000;
+}
+
+/**
+ * ミリ秒文字列を数値に変換する
+ * 桁数に応じて正規化する（"5" → 500、"05" → 50、"005" → 5）
+ */
+function parseMilliseconds(msStr: string): number {
+  const normalized = msStr.padEnd(3, "0").slice(0, 3);
+  return parseInt(normalized, 10);
+}
+
+/**
+ * "H:MM:SS" または "M:SS" 形式の文字列を秒数に変換する
+ */
+function parseColonSeparated(timeStr: string): number {
+  const parts = timeStr.split(":").map((p) => parseInt(p, 10));
+
+  if (parts.length === 3) {
+    const [hours, minutes, seconds] = parts;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
+  const [minutes, seconds] = parts;
+  return minutes * 60 + seconds;
+}
