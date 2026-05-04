@@ -160,13 +160,11 @@ export function ChorusPlayer() {
   );
 
   const gridCols =
-    videos.length <= 1
-      ? "grid-cols-1"
-      : videos.length <= 2
+    videos.length <= 2
+      ? "grid-cols-1 md:grid-cols-2"
+      : videos.length <= 4
         ? "grid-cols-1 md:grid-cols-2"
-        : videos.length <= 4
-          ? "grid-cols-1 md:grid-cols-2"
-          : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
 
   return (
     <div className="min-h-screen bg-background">
