@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 const APP_NAME = "YouTube合唱プレイヤー";
 const APP_DESCRIPTION = "複数のYouTube動画を同時再生して合唱を楽しもう";
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://example.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
