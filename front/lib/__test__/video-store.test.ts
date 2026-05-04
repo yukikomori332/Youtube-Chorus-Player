@@ -117,7 +117,7 @@ describe("parseTimeInput", () => {
    *   M:SS    / M:SS.mmm
    *   秒（整数・小数）
    *
-   * 非サポート形式は Error をスローする。
+   * 非サポート形式は 非数（NaN） を返す
    */
 
   describe("H:MM:SS 形式", () => {
@@ -170,7 +170,7 @@ describe("parseTimeInput", () => {
     });
   });
 
-  describe("非サポート形式は Error をスローする", () => {
+  describe("非サポート形式は 非数（NaN） を返す", () => {
     it.each([
       ["空文字列", ""],
       ["空白のみ", "   "],
@@ -178,7 +178,7 @@ describe("parseTimeInput", () => {
       ["コロン区切りが多すぎ", "1:2:3:4"],
       ["負の値", "-1"],
     ])("%s", (_label, input) => {
-      expect(() => parseTimeInput(input)).toThrow();
+      expect(parseTimeInput(input)).toBeNaN();
     });
   });
 });

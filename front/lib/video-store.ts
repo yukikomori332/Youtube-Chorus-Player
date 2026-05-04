@@ -105,8 +105,8 @@ const TIME_INPUT_PATTERN =
  * - `秒（小数）`      例: "3723.5"
  *
  * @param value パースする時間文字列
+ * @returns 非数（NaNを返す） 非サポート形式の場合
  * @returns 秒数（ミリ秒は小数部として返す）
- * @throws {Error} サポート外の形式が渡された場合
  * @example
  * parseTimeInput("1:02:03.500") // => 3723.5
  * parseTimeInput("2:03")        // => 123
@@ -115,9 +115,8 @@ const TIME_INPUT_PATTERN =
 export function parseTimeInput(value: string): number {
   const trimmed = value.trim();
 
-  if (!TIME_INPUT_PATTERN.test(trimmed)) {
-    throw new Error(`parseTimeInput: サポート外の形式です: "${trimmed}"`);
-  }
+  // 非サポートの形式は非数として扱う
+  if (!TIME_INPUT_PATTERN.test(trimmed)) return NaN;
 
   // ミリ秒を分離（小数点は最初の1つだけ使用）
   const dotIndex = trimmed.indexOf(".");
