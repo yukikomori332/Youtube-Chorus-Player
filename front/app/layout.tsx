@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_NAME = "YouTube合唱プレイヤー";
-const APP_DESCRIPTION = "複数のYouTube動画を同時再生して合唱を楽しもう";
+const APP_NAME = "歌ってみた合唱プレイヤー for Youtube";
+const APP_DESCRIPTION = "複数のYouTube動画を同時に再生して合唱を楽しもう！";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://example.com";
 
 export const metadata: Metadata = {

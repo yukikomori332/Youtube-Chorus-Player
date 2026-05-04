@@ -178,8 +178,8 @@ export function ChorusPlayer() {
                 <Music className="h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">YouTube合唱プレイヤー</h1>
-                <p className="text-xs text-muted-foreground">複数の動画を同時再生して合唱を楽しもう</p>
+                <h1 className="text-xl font-bold">歌ってみた合唱プレイヤー for Youtube</h1>
+                <p className="text-xs text-muted-foreground">複数の動画を同時に再生して合唱を楽しもう！</p>
               </div>
             </div>
 
@@ -241,7 +241,7 @@ export function ChorusPlayer() {
               <h2 className="text-xl font-semibold">動画を追加して始めよう</h2>
               <p className="text-muted-foreground">
                 YouTube URLを入力して、お気に入りの歌ってみた動画を追加してください。
-                複数の動画を同時に再生して、夢の合唱を実現しましょう！
+                複数の動画を同時に再生して、夢の合唱を実現しよう！
               </p>
               <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
