@@ -7,13 +7,25 @@ import { VideoCard } from "@/components/video-card";
 import { VideoInput } from "@/components/video-input";
 import { type VideoPlaybackConfig } from "@/lib/video-store";
 
+// YouTube IFrame API の読み込み状態を表す判別可能ユニオン
+type YouTubeApiStatus = { status: "idle" } | { status: "loading"; promise: Promise<void> } | { status: "ready" };
+
+// YouTube IFrame API の読み込みで使用する定数
+const YOUTUBE_API_SRC = "https://www.youtube.com/iframe_api";
+const YOUTUBE_API_TIMEOUT_MS = 15_000;
+
 export function ChorusPlayer() {
   // ───────────────────────────────────────────
   // ref
   // ───────────────────────────────────────────
   const videosRef = useRef<VideoPlaybackConfig[]>([]);
   const playersRef = useRef<Map<string, YT.Player>>(new Map());
-  const youTubeApiPromiseRef = useRef<Promise<void> | null>(null);
+  /**
+   * YouTube IFrame API の読み込み状態を ref で管理する
+   * - state にすると API 読み込み完了のたびに再レンダーが走るため ref を選択
+   * - コンポーネントのライフサイクル全体でただひとつのYouTube IFrame API の読み込み状態を保証
+   */
+  const youTubeApiStatusRef = useRef<YouTubeApiStatus>({ status: "idle" });
 
   // ───────────────────────────────────────────
   // state
@@ -33,17 +45,30 @@ export function ChorusPlayer() {
   // ───────────────────────────────────────────
   // YouTube IFrame API（URL追加時にのみロード）
   // ───────────────────────────────────────────
+  /**
+   * YouTube IFrame API を冪等に読み込む
+   *
+   * - "idle"   → スクリプトを挿入してロード開始、Promise をキャッシュ
+   * - "loading" → 既存の Promise をそのまま返す（重複ロード防止）
+   * - "ready"  → 即座に resolve（再ロード不要）
+   *
+   * finally でキャッシュをリセットせず、成功後は "ready" に遷移する
+   * これにより後から呼んだ側も即時 resolve できる
+   */
   const ensureYouTubeIframeApi = useCallback((): Promise<void> => {
     if (typeof window === "undefined") return Promise.resolve();
     if (window.YT?.Player) return Promise.resolve();
 
-    if (youTubeApiPromiseRef.current) return youTubeApiPromiseRef.current;
+    const current = youTubeApiStatusRef.current;
 
-    youTubeApiPromiseRef.current = new Promise<void>((resolve, reject) => {
-      const existing = document.querySelector<HTMLScriptElement>('script[src="https://www.youtube.com/iframe_api"]');
-      if (!existing) {
+    if (current.status === "ready") return Promise.resolve();
+    if (current.status === "loading") return current.promise;
+
+    const promise = new Promise<void>((resolve, reject) => {
+      // スクリプトがまだ挿入されていなければ挿入する
+      if (!document.querySelector<HTMLScriptElement>(`script[src="${YOUTUBE_API_SRC}"]`)) {
         const tag = document.createElement("script");
-        tag.src = "https://www.youtube.com/iframe_api";
+        tag.src = YOUTUBE_API_SRC;
         tag.async = true;
         tag.onerror = () => reject(new Error("Failed to load YouTube IFrame API"));
 
@@ -52,6 +77,7 @@ export function ChorusPlayer() {
         parent.insertBefore(tag, firstScript ?? null);
       }
 
+      // 既存のコールバックを保護しつつ上書きする
       const prev = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => {
         try {
@@ -61,6 +87,7 @@ export function ChorusPlayer() {
         }
       };
 
+      // API がすでにロード済みの場合のポーリング（スクリプト二重挿入時のフォールバック）
       const startedAt = Date.now();
       const timer = window.setInterval(() => {
         if (window.YT?.Player) {
@@ -68,16 +95,25 @@ export function ChorusPlayer() {
           resolve();
           return;
         }
-        if (Date.now() - startedAt > 15000) {
+        if (Date.now() - startedAt > YOUTUBE_API_TIMEOUT_MS) {
           window.clearInterval(timer);
           reject(new Error("Timed out waiting for YouTube IFrame API"));
         }
       }, 100);
-    }).finally(() => {
-      youTubeApiPromiseRef.current = null;
-    });
+    }).then(
+      () => {
+        // 成功時は "ready" に遷移し、以降の呼び出しを即時 resolve にする
+        youTubeApiStatusRef.current = { status: "ready" };
+      },
+      (error: unknown) => {
+        // 失敗時は "idle" に戻して次回の再試行を許可する
+        youTubeApiStatusRef.current = { status: "idle" };
+        throw error;
+      }
+    );
 
-    return youTubeApiPromiseRef.current;
+    youTubeApiStatusRef.current = { status: "loading", promise };
+    return promise;
   }, []);
 
   // ───────────────────────────────────────────
@@ -165,9 +201,19 @@ export function ChorusPlayer() {
   // ───────────────────────────────────────────
   // 動画の追加・更新・削除
   // ───────────────────────────────────────────
+  /**
+   * 動画追加と API ロードを並行して開始する
+   *
+   * API ロードは非同期で進行するが、プレイヤー生成は後続処理が担うため
+   * ここでは await せず、エラーは console.error に委ねる
+   */
   const addVideo = useCallback(
     (url: string, videoId: string) => {
-      void ensureYouTubeIframeApi();
+      // API ロードを開始（失敗時はコンソールに出力して握りつぶさない）
+      ensureYouTubeIframeApi().catch((error: unknown) => {
+        console.error("YouTube IFrame API のロードに失敗しました:", error);
+      });
+
       setVideos((prev) => [
         ...prev,
         {
