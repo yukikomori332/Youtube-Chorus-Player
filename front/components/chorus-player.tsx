@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Play, Pause, RotateCcw, Music, Settings2 } from "lucide-react";
+import { Play, Pause, RotateCcw, Music, Settings2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoCard } from "@/components/video-card";
 import { VideoInput } from "@/components/video-input";
@@ -295,7 +295,13 @@ export function ChorusPlayer() {
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* URL入力 */}
         <section className="max-w-2xl mx-auto">
-          <VideoInput onAdd={addVideo} />
+          <div className="max-w-md mx-auto space-y-4">
+            <VideoInput onAdd={addVideo} />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Info className="h-3.5 w-3.5 shrink-0" />
+              <span>ネットワーク環境により、動画の再生開始が遅れる場合があります。</span>
+            </div>
+          </div>
         </section>
 
         {/* 動画グリッド */}
