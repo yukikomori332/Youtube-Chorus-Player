@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { Music, Shield } from "lucide-react";
+import { Navigation } from "@/components/navigation";
+import { ALL_NAV_ITEMS } from "@/lib/navigation";
 
 export const metadata = {
   title: "プライバシーポリシー | 歌ってみた合唱プレイヤー for Youtube",
   description: "歌ってみた合唱プレイヤー for Youtubeのプライバシーポリシーページです。",
 };
+
+const navItems = ALL_NAV_ITEMS.filter((item) => item.href !== "/privacy");
 
 export default function PrivacyPage() {
   const sections = [
@@ -51,16 +55,22 @@ export default function PrivacyPage() {
       {/* ヘッダー */}
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-                <Music className="h-5 w-5" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">歌ってみた合唱プレイヤー for Youtube</h1>
-                <p className="text-xs text-muted-foreground">複数の動画を同時に再生して合唱を楽しもう！</p>
-              </div>
-            </Link>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary text-primary-foreground">
+                  <Music className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold">歌ってみた合唱プレイヤー for Youtube</h1>
+                  <p className="text-xs text-muted-foreground">複数の動画を同時に再生して合唱を楽しもう！</p>
+                </div>
+              </Link>
+            </div>
+            <div className="flex items-center gap-1">
+              {/* ナビゲーション */}
+              <Navigation items={navItems} />
+            </div>
           </div>
         </div>
       </header>
