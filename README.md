@@ -1,5 +1,7 @@
 <div id="top"></div>
 
+# 【重要】コア機能が規約に違反しているため、サービスを停止しています！！
+
 ## スクリーンショット
 
 <!-- 登録、ログイン、マイページ、マイセット、ソーシャル、アカウント削除、利用規約、プライバシーポリシー、問い合わせ、404 etc -->
@@ -40,11 +42,21 @@
 
 <details>
 
-<summary>お問い合わせ・利用規約・プライバシーポリシー</summary>
+<summary>お問い合わせ・利用規約</summary>
 
-| お問い合わせ | 利用規約 | プライバシーポリシー |
-| - | - | - |
-| <img src="media/screenshot_contact-laptop.png" width="100%"> | <img src="media/screenshot_term-laptop.png" width="100%"> | <img src="media/screenshot_privacy-laptop.png" width="100%"> |
+| お問い合わせ | 利用規約 |
+| - | - |
+| <img src="media/screenshot_contact-laptop.png" width="100%"> | <img src="media/screenshot_term-laptop.png" width="100%"> |
+
+</details>
+
+<details>
+
+<summary>プライバシーポリシー</summary>
+
+| プライバシーポリシー |  |
+| - | - |
+| <img src="media/screenshot_privacy-laptop.png" width="100%"> | <img src="media/screenshot_dummy-laptop.png" width="100%"> |
 
 </details>
 
@@ -68,7 +80,7 @@
 
 ## 開発期間
 
-2026.05.01 〜 2026.05.06（6日間）<br/>
+2026.05.01 〜 2026.05.07（7日間）<br/>
 制作人数 1人</br>
 
 ## 目次
