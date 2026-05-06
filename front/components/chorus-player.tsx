@@ -3,9 +3,13 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Play, Pause, RotateCcw, Music, Settings2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Navigation } from "@/components/navigation";
 import { VideoCard } from "@/components/video-card";
 import { VideoInput } from "@/components/video-input";
 import { type VideoPlaybackConfig } from "@/lib/video-store";
+import { ALL_NAV_ITEMS } from "@/lib/navigation";
+
+const navItems = ALL_NAV_ITEMS.filter((item) => item.href !== "/");
 
 // YouTube IFrame API の読み込み状態を表す判別可能ユニオン
 type YouTubeApiStatus = { status: "idle" } | { status: "loading"; promise: Promise<void> } | { status: "ready" };
@@ -267,8 +271,10 @@ export function ChorusPlayer() {
             </div>
 
             {/* 再生コントロール */}
-            {videos.length > 0 && (
+            {videos.length > 0 ? (
               <div className="flex items-center gap-2">
+                {/* ナビゲーション */}
+                <Navigation items={navItems} />
                 <Button variant="outline" size="icon" onClick={handleResetAll} title="リセット">
                   <RotateCcw className="h-4 w-4" />
                 </Button>
@@ -285,6 +291,11 @@ export function ChorusPlayer() {
                     </>
                   )}
                 </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                {/* ナビゲーション */}
+                <Navigation items={navItems} />
               </div>
             )}
           </div>
