@@ -158,29 +158,6 @@ export function ChorusPlayer() {
     });
   }, [setIsPlaying, setFinishedVideos, playersRef]);
 
-  const handleResetAll = useCallback(() => {
-    setIsPlaying(false);
-    setFinishedVideos(new Set());
-    playersRef.current.forEach((player) => {
-      try {
-        player.pauseVideo();
-        player.seekTo(0, true);
-      } catch {
-        // プレイヤーが既に破棄されている場合は無視
-      }
-    });
-    videos.forEach((video) => {
-      const player = playersRef.current.get(video.id);
-      if (player) {
-        try {
-          player.seekTo(video.startTime, true);
-        } catch {
-          // プレイヤーが既に破棄されている場合は無視
-        }
-      }
-    });
-  }, [videos, playersRef, setIsPlaying, setFinishedVideos]);
-
   const handleReachedEnd = useCallback(
     (id: string) => {
       if (!(syncedRepeatEnabled && isPlaying)) return;
@@ -275,9 +252,6 @@ export function ChorusPlayer() {
               <div className="flex items-center gap-2">
                 {/* ナビゲーション */}
                 <Navigation items={navItems} />
-                <Button variant="outline" size="icon" onClick={handleResetAll} title="リセット">
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
                 <Button size="lg" onClick={isPlaying ? handlePauseAll : handlePlayAll} className="gap-2">
                   {isPlaying ? (
                     <>
