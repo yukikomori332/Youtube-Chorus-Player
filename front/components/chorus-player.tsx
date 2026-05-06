@@ -249,7 +249,7 @@ export function ChorusPlayer() {
 
             {/* 再生コントロール */}
             {videos.length > 0 ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 {/* ナビゲーション */}
                 <Navigation items={navItems} />
                 <Button size="lg" onClick={isPlaying ? handlePauseAll : handlePlayAll} className="gap-2">
